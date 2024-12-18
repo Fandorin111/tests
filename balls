@@ -1,0 +1,95 @@
+import pygame
+import random
+
+# Инициализация Pygame
+pygame.init()
+
+# Настройки экрана
+WIDTH, HEIGHT = 800, 600
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Мячик и препятствия")
+
+# Цвета
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+RED = (255, 0, 0)
+BLUE = (0, 0, 255)
+
+# Настройки мячика
+ball_radius = 20
+ball_x = WIDTH // 2
+ball_y = HEIGHT - 100
+ball_speed = 5
+
+# Настройки препятствий
+obstacle_width = 100
+obstacle_height = 20
+obstacle_speed = 5
+obstacles = []
+
+# Таймер появления препятствий
+spawn_timer = 0
+spawn_delay = 30
+
+# Основные переменные
+running = True
+clock = pygame.time.Clock()
+score = 0
+font = pygame.font.SysFont("Arial", 24)
+
+def draw_ball(x, y):
+    pygame.draw.circle(screen, BLUE, (x, y), ball_radius)
+
+def draw_obstacles(obstacles):
+    for obs in obstacles:
+        pygame.draw.rect(screen, RED, obs)
+
+def display_score(score):
+    text = font.render(f"Счет: {score}", True, WHITE)
+    screen.blit(text, (10, 10))
+
+while running:
+    screen.fill(BLACK)
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+
+    # Управление мячиком
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_LEFT] and ball_x - ball_radius > 0:
+        ball_x -= ball_speed
+    if keys[pygame.K_RIGHT] and ball_x + ball_radius < WIDTH:
+        ball_x += ball_speed
+
+    # Появление новых препятствий
+    spawn_timer += 1
+    if spawn_timer >= spawn_delay:
+        spawn_timer = 0
+        new_obstacle = pygame.Rect(random.randint(0, WIDTH - obstacle_width), 0, obstacle_width, obstacle_height)
+        obstacles.append(new_obstacle)
+
+    # Движение препятствий
+    for obs in obstacles:
+        obs.y += obstacle_speed
+
+    # Удаление пройденных препятствий
+    obstacles = [obs for obs in obstacles if obs.y < HEIGHT]
+
+    # Проверка на столкновения
+    for obs in obstacles:
+        if obs.colliderect(pygame.Rect(ball_x - ball_radius, ball_y - ball_radius, ball_radius * 2, ball_radius * 2)):
+            running = False
+
+    # Рисование объектов
+    draw_ball(ball_x, ball_y)
+    draw_obstacles(obstacles)
+    display_score(score)
+
+    # Увеличение счета
+    score += 1
+
+    pygame.display.flip()
+    clock.tick(30)
+
+pygame.quit()
